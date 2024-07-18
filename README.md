@@ -1,4 +1,4 @@
-# 🎈 Blank app template
+# 🎈 EDI to Excel APP
 
 A simple Streamlit app template for you to modify!
 
