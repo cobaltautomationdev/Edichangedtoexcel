@@ -256,27 +256,6 @@ def edi_file_to_df(slns,has_sln:bool):
     return df
 
 
-# def extract_isase_sections(file_path):
-#     sections = []
-#     current_section = []
-#     with open(file_path, 'r', encoding='utf-8') as file:
-#         for line in file:
-#             line = line.strip()
-#             if line.startswith('ISA'):
-#                 if current_section: 
-#                     sections.append('\n'.join(current_section))
-#                 current_section = [line]
-#             elif line.startswith('SE'):
-#                 current_section.append(line)
-#                 sections.append('\n'.join(current_section))
-#                 current_section = []
-#             else:
-#                 current_section.append(line)
-#         if current_section:
-#             sections.append('\n'.join(current_section))
-#     return sections
-
-
 def extract_isase_sections(lines):
     sections = []
     current_section = []
@@ -304,12 +283,11 @@ def has_line_startswith_sln(section):
     return False
 
 
-import os 
 from tqdm import tqdm
-import glob
 import io
 import zipfile
 
+st.set_page_config(page_title="EDI to XLSX", layout="wide",page_icon="icon\cobalt_logo.png") 
 st.sidebar.header("EDI transfer to XLSX")
     
 with st.sidebar.form("TextSelectForm",clear_on_submit=True):
@@ -351,8 +329,5 @@ if submit_button and uploaded_files:
          for filename, stream in excel_streams:
             zf.writestr(filename, stream.getvalue())
     outputzip.seek(0)
-    # excel_bytes = outputxlsx.getvalue()
-    # zipfile.ZipFile(outputxlsx, mode='w').write(f'{file_name}_output_{po_no}_{style_no}_{idx+1}.xlsx')
-    # st.download_button(label=f'Download {file_name}_output_{po_no}_{style_no}_{idx+1}.xlsx', data=excel_bytes, file_name=f'{file_name}_output_{po_no}_{style_no}_{idx+1}.xlsx')
     st.download_button(label='Download ZIP File', data=outputzip, file_name='archive.zip', mime='application/zip')
     
