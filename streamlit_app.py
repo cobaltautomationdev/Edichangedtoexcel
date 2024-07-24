@@ -329,5 +329,5 @@ if submit_button and uploaded_files:
          for filename, stream in excel_streams:
             zf.writestr(filename, stream.getvalue())
     outputzip.seek(0)
-    st.download_button(label='Download ZIP File', data=outputzip, file_name='archive.zip', mime='application/zip')
+    st.download_button(label='Download ZIP File', data=outputzip, file_name=f'{file_name}.zip', mime='application/zip')
     
