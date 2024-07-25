@@ -12,6 +12,8 @@ def parse_edi_file_sln(section):
     dtm_info = []
     n1_info = []
     po1_info = {}
+    po4_info = {}
+    po4_info_list=[]
     current_sln={}
     
     for line in lines:
@@ -35,10 +37,15 @@ def parse_edi_file_sln(section):
         
         elif segments[0] == 'N1':
             n1_info.append({'N1': {'Name': segments[2]}})
-
+            
         elif segments[0] == 'PO1':
             po1_info={'Cases_per_Prepack': segments[2],
                         'MASTER_UPC': segments[7], }
+            
+        elif segments[0] == 'PO4':
+            po4_info={'Qty(UOM)per_1_inner_pack': segments[1],
+                        'Pack_Qty(UOM)per_carton': "", }
+            po4_info_list.append(po4_info)
             
         elif segments[0] == 'SLN':
             if dtm_info: 
@@ -66,6 +73,7 @@ def parse_edi_file_sln(section):
                 **dtm_dict,
                 **n1_dict,
                 **po1_info,
+                # **po4_info,
                 'SLN': {
                     'line_number': po_line_num,
                     'quantity': quantity,
@@ -88,6 +96,7 @@ def parse_edi_file_sln(section):
             dtm_info = []
             n1_info = []
             po1_info = {}
+            # po4_info = {}
 
             if prev_sln:
                 prev_sln['PID']=current_pid_list.copy()
@@ -100,7 +109,10 @@ def parse_edi_file_sln(section):
         
         prev_sln = current_sln  
         if prev_sln:
-                prev_sln['PID']=current_pid_list.copy()       
+                prev_sln['PID']=current_pid_list.copy()    
+    for i, po4_info in enumerate(po4_info_list):
+        if i < len(slns):
+            slns[i].update(po4_info)            
     return slns              
 
 
@@ -116,6 +128,8 @@ def parse_edi_file_no_sln(section):
     dtm_info = []
     n1_info = []
     po1_info = {}
+    po4_info = {}
+    po4_info_list = []
     current_sln={}
     
     for line in lines:
@@ -139,6 +153,11 @@ def parse_edi_file_no_sln(section):
         
         elif segments[0] == 'N1':
             n1_info.append({'N1': {'Name': segments[2]}})
+            
+        elif segments[0] == 'PO4':
+            po4_info={'Qty(UOM)per_1_inner_pack': segments[1],
+                        'Pack_Qty(UOM)per_carton': segments[2], }
+            po4_info_list.append(po4_info)
 
         elif segments[0] == 'PO1':
             if dtm_info:
@@ -149,7 +168,7 @@ def parse_edi_file_no_sln(section):
             if n1_info:
                 MF,MP=[dct['N1']['Name'] for dct in n1_info]
                 n1_dict = {'Vendor_Name': MF, 'Factory_Name':MP}
-                
+
             po_line_num = segments[1]
             quantity = segments[2]
             unit_price = segments[4]
@@ -166,6 +185,7 @@ def parse_edi_file_no_sln(section):
                 **dtm_dict,
                 **n1_dict,
                 **po1_info,
+                # **po4_info,
                 'SLN': {
                     'line_number': po_line_num,
                     'quantity': quantity,
@@ -181,13 +201,12 @@ def parse_edi_file_no_sln(section):
             }
             
             slns.append(current_sln)
-            
             beg_info = {}
             ref_info = {}
-            # ctp_info = {}
             dtm_info = []
             n1_info = []
             po1_info = {}
+            # po4_info = {}
 
             if prev_sln:
                 prev_sln['PID']=current_pid_list.copy()
@@ -200,7 +219,11 @@ def parse_edi_file_no_sln(section):
         
         prev_sln = current_sln  
         if prev_sln:
-                prev_sln['PID']=current_pid_list.copy()       
+                prev_sln['PID']=current_pid_list.copy()  
+        
+    for i, po4_info in enumerate(po4_info_list):
+        if i < len(slns):
+            slns[i].update(po4_info)   
     return slns              
 
 import pandas as pd
