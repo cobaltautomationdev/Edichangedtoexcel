@@ -243,9 +243,14 @@ def edi_file_to_df(slns,has_sln:bool):
         
         row_data['N1_Name'] = sln_dict.get('N1', {}).get('Name')
         
-        if has_sln:
-            row_data['PO1_Cases_per_Prepack'] = sln_dict.get('Cases_per_Prepack')
-            row_data['PO1_MASTER_UPC'] = sln_dict.get('MASTER_UPC')
+        # if not has_sln:
+        row_data['PO1_Cases_per_Prepack'] = sln_dict.get('Cases_per_Prepack')
+        row_data['PO1_MASTER_UPC'] = sln_dict.get('MASTER_UPC')
+        row_data['PO4_Qty(UOM)per_1_inner_pack'] = sln_dict.get('Qty(UOM)per_1_inner_pack')
+        row_data['PO4_Pack_Qty(UOM)per_carton'] = sln_dict.get('Pack_Qty(UOM)per_carton')
+        # else:
+        #     row_data['PO1_Cases_per_Prepack'] = sln_dict.get('Cases_per_Prepack')
+        #     row_data['PO1_MASTER_UPC'] = sln_dict.get('MASTER_UPC')
 
         # 获取SLN信息
         sln = sln_dict['SLN']
@@ -270,7 +275,7 @@ def edi_file_to_df(slns,has_sln:bool):
     max_pids = max(len(pid_list) for sln_dict in slns for pid_list in [sln_dict.get('PID', [])])
 
     column_names = ['BEG_PO#', 'REF_REF','CTP_RES', 'Start_Date','End_Date','Vendor_Name', 'Factory_Name','PO1_Cases_per_Prepack', 'PO1_MASTER_UPC',
-                    'SLN_line_number', 'SLN_quantity', 'SLN_unit_price', 'SLN_upc', 'SLN_style', 
+                    'PO4_Qty(UOM)per_1_inner_pack','PO4_Pack_Qty(UOM)per_carton','SLN_line_number', 'SLN_quantity', 'SLN_unit_price', 'SLN_upc', 'SLN_style', 
                     'SLN_NRF_Color_Code', 'SLN_NRF_Size_Code','SLN_Class_Number', 'SLN_Subclass_Number']
          
     for i in range(1, max_pids + 1):
