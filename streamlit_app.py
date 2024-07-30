@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import datetime
 
 def parse_edi_file_sln(section):
     lines = section.split('\n')
@@ -243,14 +244,10 @@ def edi_file_to_df(slns,has_sln:bool):
         
         row_data['N1_Name'] = sln_dict.get('N1', {}).get('Name')
         
-        # if not has_sln:
         row_data['PO1_Cases_per_Prepack'] = sln_dict.get('Cases_per_Prepack')
         row_data['PO1_MASTER_UPC'] = sln_dict.get('MASTER_UPC')
         row_data['PO4_Qty(UOM)per_1_inner_pack'] = sln_dict.get('Qty(UOM)per_1_inner_pack')
         row_data['PO4_Pack_Qty(UOM)per_carton'] = sln_dict.get('Pack_Qty(UOM)per_carton')
-        # else:
-        #     row_data['PO1_Cases_per_Prepack'] = sln_dict.get('Cases_per_Prepack')
-        #     row_data['PO1_MASTER_UPC'] = sln_dict.get('MASTER_UPC')
 
         # 获取SLN信息
         sln = sln_dict['SLN']
@@ -324,38 +321,57 @@ with st.sidebar.form("TextSelectForm",clear_on_submit=True):
 
 
 if submit_button and uploaded_files:
-    excel_streams = []
+    # excel_streams = []
+    file_zips = {}
     for uploaded_file in tqdm(uploaded_files):
         file_name = uploaded_file.name
         file_name = file_name.rsplit(".")[0]
         lines = [line.decode('utf-8') for line in uploaded_file.readlines()]
         sections = extract_isase_sections(lines)
-        for idx, setcion in enumerate(sections):
-            has_sln = has_line_startswith_sln(setcion) 
-            if has_sln:
-                slns = parse_edi_file_sln(setcion)
-                df = edi_file_to_df(slns,has_sln)
-                df.ffill(inplace=True)
-                df['PO1_Cases_per_Prepack'] = df['PO1_Cases_per_Prepack'].astype(int)
-                df['SLN_quantity'] = df['SLN_quantity'].astype(int)
-                df['Order Qty'] = df['PO1_Cases_per_Prepack'] * df['SLN_quantity']  
-            else:
-                slns = parse_edi_file_no_sln(setcion)
-                df = edi_file_to_df(slns,has_sln)
-                df.ffill(inplace=True)
-                df['Order Qty'] = df['SLN_quantity']
-            po_no = df['BEG_PO#'].iloc[0]
-            style_no = df['SLN_style'].iloc[0]
-            
-            outputxlsx = io.BytesIO()
-            df.to_excel(outputxlsx, index=False)
-            outputxlsx.seek(0)
-            excel_streams.append((f'{file_name}_output_{po_no}_{style_no}_{idx+1}.xlsx', outputxlsx))   
-                 
-    outputzip = io.BytesIO()
-    with zipfile.ZipFile(outputzip, mode='w') as zf:
-         for filename, stream in excel_streams:
-            zf.writestr(filename, stream.getvalue())
-    outputzip.seek(0)
-    st.download_button(label='Download ZIP File', data=outputzip, file_name=f'{file_name}.zip', mime='application/zip')
+        file_zip = io.BytesIO()
+        with zipfile.ZipFile(file_zip, mode="w") as zf:
+            for idx, setcion in enumerate(sections):
+                has_sln = has_line_startswith_sln(setcion) 
+                if has_sln:
+                    slns = parse_edi_file_sln(setcion)
+                    df = edi_file_to_df(slns,has_sln)
+                    df.ffill(inplace=True)
+                    df['PO1_Cases_per_Prepack'] = df['PO1_Cases_per_Prepack'].astype(int)
+                    df['SLN_quantity'] = df['SLN_quantity'].astype(int)
+                    df['Order Qty'] = df['PO1_Cases_per_Prepack'] * df['SLN_quantity']  
+                else:
+                    slns = parse_edi_file_no_sln(setcion)
+                    df = edi_file_to_df(slns,has_sln)
+                    df.ffill(inplace=True)
+                    df['Order Qty'] = df['SLN_quantity']
+                    
+                po_no = df['BEG_PO#'].iloc[0]
+                style_no = df['SLN_style'].iloc[0]
+                
+                outputxlsx = io.BytesIO()
+                df.to_excel(outputxlsx, index=False)
+                outputxlsx.seek(0)
+                zf.writestr(f"{file_name}_output_{po_no}_{style_no}_{idx+1}.xlsx", outputxlsx.getvalue())
+        file_zips[file_name] = file_zip
     
+    if len(file_zips) == 1:
+        # If there is only one file, return the zip file directly.
+        file_name, file_zip = next(iter(file_zips.items()))
+        file_zip.seek(0)
+        st.download_button(
+            label='Download ZIP File',
+            data=file_zip,
+            file_name=f'{file_name}.zip',
+            mime='application/zip'
+        )
+    else:
+        combined_zip = io.BytesIO()            
+        with zipfile.ZipFile(combined_zip, mode="w") as final_zip:
+            for file_name, file_zip in file_zips.items():
+                file_zip.seek(0)
+                final_zip.writestr(f"{file_name}.zip", file_zip.getvalue())       
+        st.download_button(
+            label='Download ZIP Files',
+            data=combined_zip, 
+            file_name=f'combined_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip', 
+            mime='application/zip')
