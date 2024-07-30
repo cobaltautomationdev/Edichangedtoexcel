@@ -233,52 +233,64 @@ def edi_file_to_df(slns,has_sln:bool):
     for sln_dict in slns:
         row_data = {}
         # 获取非SLN信息
-        row_data['BEG_PO#'] = sln_dict.get('BEG', {}).get('PO#')
-        row_data['REF_REF'] = sln_dict.get('REF', {}).get('REF')
-        row_data['CTP_RES'] = sln_dict.get('CTP', {}).get('RES')
+        row_data["KOHL'S PO#"] = sln_dict.get('BEG', {}).get('PO#')
+        row_data['Pack Type'] = sln_dict.get('REF', {}).get('REF')
+        row_data['Retail Price'] = sln_dict.get('CTP', {}).get('RES')
         # row_data['DTM_Date'] = sln_dict.get('DTM', {}).get('Date')
-        row_data['Start_Date'] = sln_dict.get('Start_Date')
-        row_data['End_Date'] = sln_dict.get('End_Date')
+        row_data['Shipping Window1'] = sln_dict.get('Start_Date')
+        row_data['Shipping Window2'] = sln_dict.get('End_Date')
         row_data['Vendor_Name'] = sln_dict.get('Vendor_Name')
         row_data['Factory_Name'] = sln_dict.get('Factory_Name')
         
-        row_data['N1_Name'] = sln_dict.get('N1', {}).get('Name')
+        # row_data['N1_Name'] = sln_dict.get('N1', {}).get('Name')
         
-        row_data['PO1_Cases_per_Prepack'] = sln_dict.get('Cases_per_Prepack')
-        row_data['PO1_MASTER_UPC'] = sln_dict.get('MASTER_UPC')
-        row_data['PO4_Qty(UOM)per_1_inner_pack'] = sln_dict.get('Qty(UOM)per_1_inner_pack')
-        row_data['PO4_Pack_Qty(UOM)per_carton'] = sln_dict.get('Pack_Qty(UOM)per_carton')
+        row_data['Cases_per_Prepack'] = sln_dict.get('Cases_per_Prepack')
+        row_data['MASTER_UPC'] = sln_dict.get('MASTER_UPC')
+        row_data['Qty(UOM)per_1_inner_pack'] = sln_dict.get('Qty(UOM)per_1_inner_pack')
+        row_data['Pack_Qty(UOM)per_carton'] = sln_dict.get('Pack_Qty(UOM)per_carton')
 
         # 获取SLN信息
         sln = sln_dict['SLN']
-        row_data['SLN_line_number'] = sln['line_number']
-        row_data['SLN_quantity'] = sln['quantity']
-        row_data['SLN_unit_price'] = sln['unit_price']
-        row_data['SLN_upc'] = sln['upc']
-        row_data['SLN_style'] = sln['style']
-        row_data['SLN_NRF_Color_Code'] = sln['NRF_Color_Code']
-        row_data['SLN_NRF_Size_Code'] = sln['NRF_Size_Code']
-        row_data['SLN_Class_Number'] = sln['Class_Number']
-        row_data['SLN_Subclass_Number'] = sln['Subclass_Number']
+        row_data['line_number'] = sln['line_number']
+        row_data['Prepack Ratio'] = sln['quantity']
+        row_data['unit_price'] = sln['unit_price']
+        row_data['UPC'] = sln['upc']
+        row_data['Style'] = sln['style']
+        row_data['NRF_Color_Code'] = sln['NRF_Color_Code']
+        row_data['NRF_Size_Code'] = sln['NRF_Size_Code']
+        row_data['Class_Number'] = sln['Class_Number']
+        row_data['Subclass_Number'] = sln['Subclass_Number']
 
         # 获取PID信息
+        pid_header = ['Product Description', 'Vendor Color', 'Size']
         pid_list = sln_dict.get('PID', [])
         for i, pid_dict in enumerate(pid_list):
-            pid_key = f'PID_PID_{i+1}'
+            pid_key = f'{pid_header[i]}'
             row_data[pid_key] = pid_dict['PID']
-
+            
         rows.append(row_data)
 
     max_pids = max(len(pid_list) for sln_dict in slns for pid_list in [sln_dict.get('PID', [])])
 
-    column_names = ['BEG_PO#', 'REF_REF','CTP_RES', 'Start_Date','End_Date','Vendor_Name', 'Factory_Name','PO1_Cases_per_Prepack', 'PO1_MASTER_UPC',
-                    'PO4_Qty(UOM)per_1_inner_pack','PO4_Pack_Qty(UOM)per_carton','SLN_line_number', 'SLN_quantity', 'SLN_unit_price', 'SLN_upc', 'SLN_style', 
-                    'SLN_NRF_Color_Code', 'SLN_NRF_Size_Code','SLN_Class_Number', 'SLN_Subclass_Number']
-         
+    # column_names = ['BEG_PO#', 'REF_REF','CTP_RES', 'Start_Date','End_Date','Vendor_Name', 'Factory_Name','PO1_Cases_per_Prepack', 'PO1_MASTER_UPC',
+    #                 'PO4_Qty(UOM)per_1_inner_pack','PO4_Pack_Qty(UOM)per_carton','SLN_line_number', 'SLN_quantity', 'SLN_unit_price', 'SLN_upc', 'SLN_style', 
+    #                 'SLN_NRF_Color_Code', 'SLN_NRF_Size_Code','SLN_Class_Number', 'SLN_Subclass_Number']
+    column_names = ["KOHL'S PO#", 'Pack Type','Retail Price', 'Shipping Window1','Shipping Window2','Vendor_Name', 'Factory_Name',
+                    'Cases_per_Prepack', 'MASTER_UPC',
+                    'Qty(UOM)per_1_inner_pack','Pack_Qty(UOM)per_carton','line_number', 'Prepack Ratio', 'unit_price', 'UPC', 'Style', 
+                    'NRF_Color_Code', 'NRF_Size_Code','Class_Number', 'Subclass_Number']
+    
+    # for i in range(1, max_pids + 1):
+    #     column_names.append(f"PID_PID_{i}")
+    #     df = pd.DataFrame(rows, columns=column_names)
+    # return df
+    
     for i in range(1, max_pids + 1):
-        column_names.append(f"PID_PID_{i}")
+        column_names.append(f"{pid_header[i-1]}")
         df = pd.DataFrame(rows, columns=column_names)
+        
     return df
+    
 
 
 def extract_isase_sections(lines):
@@ -336,17 +348,17 @@ if submit_button and uploaded_files:
                     slns = parse_edi_file_sln(setcion)
                     df = edi_file_to_df(slns,has_sln)
                     df.ffill(inplace=True)
-                    df['PO1_Cases_per_Prepack'] = df['PO1_Cases_per_Prepack'].astype(int)
-                    df['SLN_quantity'] = df['SLN_quantity'].astype(int)
-                    df['Order Qty'] = df['PO1_Cases_per_Prepack'] * df['SLN_quantity']  
+                    df['Cases_per_Prepack'] = df['Cases_per_Prepack'].astype(int)
+                    df['Prepack Ratio'] = df['Prepack Ratio'].astype(int)
+                    df['Order Qty'] = df['Cases_per_Prepack'] * df['Prepack Ratio']  
                 else:
                     slns = parse_edi_file_no_sln(setcion)
                     df = edi_file_to_df(slns,has_sln)
                     df.ffill(inplace=True)
-                    df['Order Qty'] = df['SLN_quantity']
+                    df['Order Qty'] = df['Prepack Ratio']
                     
-                po_no = df['BEG_PO#'].iloc[0]
-                style_no = df['SLN_style'].iloc[0]
+                po_no = df["KOHL'S PO#"].iloc[0]
+                style_no = df['Style'].iloc[0]
                 
                 outputxlsx = io.BytesIO()
                 df.to_excel(outputxlsx, index=False)
