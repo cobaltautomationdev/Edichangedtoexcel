@@ -357,7 +357,8 @@ if submit_button and uploaded_files:
                     slns = parse_edi_file_sln(setcion)
                     df = edi_file_to_df(slns)
                     df.ffill(inplace=True)
-                    df['Cases_per_Prepack'] = df['Cases_per_Prepack'].astype(int)
+
+                    df['Cases_per_Prepack'] = df['Cases_per_Prepack'].fillna(0).astype(int)
                     df['Prepack Ratio'] = df['Prepack Ratio'].astype(int)
                     df['Order Qty'] = df['Cases_per_Prepack'] * df['Prepack Ratio']  
                 else:
