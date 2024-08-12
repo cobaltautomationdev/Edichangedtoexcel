@@ -263,6 +263,10 @@ def edi_file_to_df(slns):
         row_data['Factory_Name'] = sln_dict.get('Factory_Name')
         
         row_data['Order Type'] = sln_dict.get('SAC', {}).get('Name')
+        row_data['Cases_per_Prepack'] = sln_dict.get('Cases_per_Prepack')
+        row_data['MASTER_UPC'] = sln_dict.get('MASTER_UPC')
+        row_data['Qty(UOM)per_1_inner_pack'] = sln_dict.get('Qty(UOM)per_1_inner_pack')
+        row_data['Pack_Qty(UOM)per_carton'] = sln_dict.get('Pack_Qty(UOM)per_carton')
 
         # 获取SLN信息
         sln = sln_dict['SLN']
