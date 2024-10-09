@@ -263,10 +263,12 @@ def edi_file_to_df(slns):
         row_data['Factory_Name'] = sln_dict.get('Factory_Name')
         
         row_data['Order Type'] = sln_dict.get('SAC', {}).get('Name')
+        
         row_data['Cases_per_Prepack'] = sln_dict.get('Cases_per_Prepack')
         row_data['MASTER_UPC'] = sln_dict.get('MASTER_UPC')
         row_data['Qty(UOM)per_1_inner_pack'] = sln_dict.get('Qty(UOM)per_1_inner_pack')
         row_data['Pack_Qty(UOM)per_carton'] = sln_dict.get('Pack_Qty(UOM)per_carton')
+        
 
         # 获取SLN信息
         sln = sln_dict['SLN']
@@ -299,18 +301,12 @@ def edi_file_to_df(slns):
                     'Qty(UOM)per_1_inner_pack','Pack_Qty(UOM)per_carton','line_number', 'Prepack Ratio', 'unit_price', 'UPC', 'Style', 
                     'NRF_Color_Code', 'NRF_Size_Code','Class_Number', 'Subclass_Number']
     
-    # for i in range(1, max_pids + 1):
-    #     column_names.append(f"PID_PID_{i}")
-    #     df = pd.DataFrame(rows, columns=column_names)
-    # return df
-    
     for i in range(1, max_pids + 1):
         column_names.append(f"{pid_header[i-1]}")
         df = pd.DataFrame(rows, columns=column_names)
         
     return df
     
-
 
 def extract_isase_sections(lines):
     sections = []
@@ -367,7 +363,8 @@ if submit_button and uploaded_files:
                     slns = parse_edi_file_sln(setcion)
                     df = edi_file_to_df(slns)
                     df.ffill(inplace=True)
-                    df['Cases_per_Prepack'] = df['Cases_per_Prepack'].astype(int)
+
+                    df['Cases_per_Prepack'] = df['Cases_per_Prepack'].fillna(0).astype(int)
                     df['Prepack Ratio'] = df['Prepack Ratio'].astype(int)
                     df['Order Qty'] = df['Cases_per_Prepack'] * df['Prepack Ratio']  
                 else:
