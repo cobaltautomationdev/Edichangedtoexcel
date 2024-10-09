@@ -278,7 +278,6 @@ def parse_edi_file_no_sln(section):
 
 import pandas as pd
 def edi_file_to_df(slns):
-def edi_file_to_df(slns):
     rows = []
     for sln_dict in slns:
         row_data = {}
