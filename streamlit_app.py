@@ -329,7 +329,7 @@ def edi_file_to_df(slns):
     # column_names = ['BEG_PO#', 'REF_REF','CTP_RES', 'Start_Date','End_Date','Vendor_Name', 'Factory_Name','PO1_Cases_per_Prepack', 'PO1_MASTER_UPC',
     #                 'PO4_Qty(UOM)per_1_inner_pack','PO4_Pack_Qty(UOM)per_carton','SLN_line_number', 'SLN_quantity', 'SLN_unit_price', 'SLN_upc', 'SLN_style', 
     #                 'SLN_NRF_Color_Code', 'SLN_NRF_Size_Code','SLN_Class_Number', 'SLN_Subclass_Number']
-    column_names = ["KOHL'S PO#", 'Dept. No.','Order Type','Pack Type','Retail Price', 'Shipping Window1','Shipping Window2','Vendor_Name', 'Factory_Name',
+
     column_names = ["KOHL'S PO#", 'Dept. No.','Order Type','Pack Type','Retail Price', 'Shipping Window1','Shipping Window2','Vendor_Name', 'Factory_Name',
                     'Cases_per_Prepack', 'MASTER_UPC',
                     'Qty(UOM)per_1_inner_pack','Pack_Qty(UOM)per_carton','line_number', 'Prepack Ratio', 'unit_price', 'UPC', 'Style', 
