@@ -6,9 +6,7 @@ def parse_edi_file_sln(section):
     slns = []
     current_pid_list = []
     prev_sln = None
-
     beg_info = {}
-    ref_info = []
     ref_info = []
     ctp_info = {}
     dtm_info = []
@@ -27,7 +25,6 @@ def parse_edi_file_sln(section):
             prev_sln = None
     
         elif segments[0] == 'REF':
-            ref_info.append({'REF': {'Name': segments[2]}})
             ref_info.append({'REF': {'Name': segments[2]}})
 
         elif segments[0] == 'CTP':
@@ -62,10 +59,7 @@ def parse_edi_file_sln(section):
             if ref_info:
                 dep,pack=[dct['REF']['Name'] for dct in ref_info[0:2]]
                 REF_dict = {'dep': dep, 'pack':pack}               
-            if ref_info:
-                dep,pack=[dct['REF']['Name'] for dct in ref_info[0:2]]
-                REF_dict = {'dep': dep, 'pack':pack}               
-                
+              
             po_line_num = segments[1]
             quantity = segments[4]
             unit_price = segments[6]
@@ -102,11 +96,9 @@ def parse_edi_file_sln(section):
             
             beg_info = {}
             ref_info = {}
-            # ctp_info = {}
             dtm_info = []
             n1_info = []
             po1_info = {}
-            # po4_info = {}
 
             if prev_sln:
                 prev_sln['PID']=current_pid_list.copy()
@@ -133,10 +125,8 @@ def parse_edi_file_no_sln(section):
     prev_sln = None
 
     beg_info = {}
-    ref_info = []
     sac_info=[]
     ref_info = []
-    sac_info=[]
     ctp_info = {}
     dtm_info = []
     n1_info = []
@@ -144,7 +134,6 @@ def parse_edi_file_no_sln(section):
     po4_info = {}
     po4_info_list = []
     current_sln={}
-    sac_info_added = False   
     sac_info_added = False   
     for line in lines:
         segments = line.strip().split('*')
@@ -158,12 +147,7 @@ def parse_edi_file_no_sln(section):
             ref_info.append({'REF': {'Name': segments[2]}})
             
         elif segments[0] == 'SAC':
-            sac_info.append({'SAC': {'Name': segments[13]}})        
-              
-            ref_info.append({'REF': {'Name': segments[2]}})
-            
-        elif segments[0] == 'SAC':
-            sac_info.append({'SAC': {'Name': segments[13]}})        
+            sac_info.append({'SAC': {'Name': segments[13]}})            
               
         elif segments[0] == 'CTP':
             ctp_info = {'CTP': {'RES': segments[3]}}
@@ -202,20 +186,7 @@ def parse_edi_file_no_sln(section):
                else:
                    sac_dict = {}  
                    sac_info_added =True  
-                                   
-
-            if ref_info:
-                dep,pack=[dct['REF']['Name'] for dct in ref_info[0:2]]
-                REF_dict = {'dep': dep, 'pack':pack}
-
-            if not sac_info_added:
-               if sac_info:
-                    sac_dict = sac_info[0]    
-                    sac_info_added =True
-               else:
-                   sac_dict = {}  
-                   sac_info_added =True  
-                                   
+                                                                 
             po_line_num = segments[1]
             quantity = segments[2]
             unit_price = segments[4]
@@ -273,7 +244,7 @@ def parse_edi_file_no_sln(section):
         
     for i, po4_info in enumerate(po4_info_list):
         if i < len(slns):
-            slns[i].update(po4_info)   
+            slns[i].update(po4_info)      
     return slns              
 
 import pandas as pd
@@ -320,10 +291,9 @@ def edi_file_to_df(slns):
         for i, pid_dict in enumerate(pid_list):
             pid_key = f'{pid_header[i]}'
             row_data[pid_key] = pid_dict['PID']
-            
         rows.append(row_data)
-
-    max_pids = max(len(pid_list) for sln_dict in slns for pid_list in [sln_dict.get('PID', [])])
+        
+    max_pids = max([len(pid_list) for sln_dict in slns for pid_list in [sln_dict.get('PID', [])]])
 
     # column_names = ['BEG_PO#', 'REF_REF','CTP_RES', 'Start_Date','End_Date','Vendor_Name', 'Factory_Name','PO1_Cases_per_Prepack', 'PO1_MASTER_UPC',
     #                 'PO4_Qty(UOM)per_1_inner_pack','PO4_Pack_Qty(UOM)per_carton','SLN_line_number', 'SLN_quantity', 'SLN_unit_price', 'SLN_upc', 'SLN_style', 
@@ -339,24 +309,18 @@ def edi_file_to_df(slns):
         df = pd.DataFrame(rows, columns=column_names)
         
     return df
-    
-    
 
 def extract_isase_sections(lines):
     sections = []
     current_section = []
     for line in lines:
-        line = line.strip()
-        if line.startswith('ISA'):
-            if current_section: 
+        stripped_line = line.strip()
+        if stripped_line.startswith('ISA'):
+            if current_section:
                 sections.append('\n'.join(current_section))
-            current_section = [line]
-        elif line.startswith('SE'):
-            current_section.append(line)
-            sections.append('\n'.join(current_section))
-            current_section = []
+            current_section = [stripped_line]
         else:
-            current_section.append(line)
+            current_section.append(stripped_line)
     if current_section:
         sections.append('\n'.join(current_section))
     return sections
