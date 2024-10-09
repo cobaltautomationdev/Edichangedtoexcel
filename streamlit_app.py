@@ -9,6 +9,7 @@ def parse_edi_file_sln(section):
 
     beg_info = {}
     ref_info = []
+    ref_info = []
     ctp_info = {}
     dtm_info = []
     n1_info = []
@@ -26,6 +27,7 @@ def parse_edi_file_sln(section):
             prev_sln = None
     
         elif segments[0] == 'REF':
+            ref_info.append({'REF': {'Name': segments[2]}})
             ref_info.append({'REF': {'Name': segments[2]}})
 
         elif segments[0] == 'CTP':
@@ -60,6 +62,9 @@ def parse_edi_file_sln(section):
             if ref_info:
                 dep,pack=[dct['REF']['Name'] for dct in ref_info[0:2]]
                 REF_dict = {'dep': dep, 'pack':pack}               
+            if ref_info:
+                dep,pack=[dct['REF']['Name'] for dct in ref_info[0:2]]
+                REF_dict = {'dep': dep, 'pack':pack}               
                 
             po_line_num = segments[1]
             quantity = segments[4]
@@ -73,6 +78,7 @@ def parse_edi_file_sln(section):
             
             current_sln = {
                 **beg_info,
+                **REF_dict,
                 **REF_dict,
                 **dtm_dict,
                 **n1_dict,
@@ -129,6 +135,8 @@ def parse_edi_file_no_sln(section):
     beg_info = {}
     ref_info = []
     sac_info=[]
+    ref_info = []
+    sac_info=[]
     ctp_info = {}
     dtm_info = []
     n1_info = []
@@ -136,6 +144,7 @@ def parse_edi_file_no_sln(section):
     po4_info = {}
     po4_info_list = []
     current_sln={}
+    sac_info_added = False   
     sac_info_added = False   
     for line in lines:
         segments = line.strip().split('*')
@@ -146,6 +155,11 @@ def parse_edi_file_no_sln(section):
             prev_sln = None
     
         elif segments[0] == 'REF':
+            ref_info.append({'REF': {'Name': segments[2]}})
+            
+        elif segments[0] == 'SAC':
+            sac_info.append({'SAC': {'Name': segments[13]}})        
+              
             ref_info.append({'REF': {'Name': segments[2]}})
             
         elif segments[0] == 'SAC':
@@ -189,6 +203,19 @@ def parse_edi_file_no_sln(section):
                    sac_dict = {}  
                    sac_info_added =True  
                                    
+
+            if ref_info:
+                dep,pack=[dct['REF']['Name'] for dct in ref_info[0:2]]
+                REF_dict = {'dep': dep, 'pack':pack}
+
+            if not sac_info_added:
+               if sac_info:
+                    sac_dict = sac_info[0]    
+                    sac_info_added =True
+               else:
+                   sac_dict = {}  
+                   sac_info_added =True  
+                                   
             po_line_num = segments[1]
             quantity = segments[2]
             unit_price = segments[4]
@@ -202,9 +229,11 @@ def parse_edi_file_no_sln(section):
             current_sln = {
                 **beg_info,
                 **REF_dict,
+                **REF_dict,
                 **dtm_dict,
                 **n1_dict,
                 **po1_info,
+                **sac_dict,
                 **sac_dict,
                 # **po4_info,
                 'SLN': {
@@ -223,6 +252,7 @@ def parse_edi_file_no_sln(section):
             
             slns.append(current_sln)
             beg_info = {}
+            ref_info = []
             ref_info = []
             dtm_info = []
             n1_info = []
@@ -248,11 +278,14 @@ def parse_edi_file_no_sln(section):
 
 import pandas as pd
 def edi_file_to_df(slns):
+def edi_file_to_df(slns):
     rows = []
     for sln_dict in slns:
         row_data = {}
         # 获取非SLN信息
         row_data["KOHL'S PO#"] = sln_dict.get('BEG', {}).get('PO#')
+        row_data['Dept. No.'] = sln_dict.get('dep')
+        row_data['Pack Type'] = sln_dict.get('pack')
         row_data['Dept. No.'] = sln_dict.get('dep')
         row_data['Pack Type'] = sln_dict.get('pack')
         row_data['Retail Price'] = sln_dict.get('CTP', {}).get('RES')
@@ -297,6 +330,7 @@ def edi_file_to_df(slns):
     #                 'PO4_Qty(UOM)per_1_inner_pack','PO4_Pack_Qty(UOM)per_carton','SLN_line_number', 'SLN_quantity', 'SLN_unit_price', 'SLN_upc', 'SLN_style', 
     #                 'SLN_NRF_Color_Code', 'SLN_NRF_Size_Code','SLN_Class_Number', 'SLN_Subclass_Number']
     column_names = ["KOHL'S PO#", 'Dept. No.','Order Type','Pack Type','Retail Price', 'Shipping Window1','Shipping Window2','Vendor_Name', 'Factory_Name',
+    column_names = ["KOHL'S PO#", 'Dept. No.','Order Type','Pack Type','Retail Price', 'Shipping Window1','Shipping Window2','Vendor_Name', 'Factory_Name',
                     'Cases_per_Prepack', 'MASTER_UPC',
                     'Qty(UOM)per_1_inner_pack','Pack_Qty(UOM)per_carton','line_number', 'Prepack Ratio', 'unit_price', 'UPC', 'Style', 
                     'NRF_Color_Code', 'NRF_Size_Code','Class_Number', 'Subclass_Number']
@@ -306,6 +340,7 @@ def edi_file_to_df(slns):
         df = pd.DataFrame(rows, columns=column_names)
         
     return df
+    
     
 
 def extract_isase_sections(lines):
@@ -365,10 +400,13 @@ if submit_button and uploaded_files:
                     df.ffill(inplace=True)
 
                     df['Cases_per_Prepack'] = df['Cases_per_Prepack'].fillna(0).astype(int)
+
+                    df['Cases_per_Prepack'] = df['Cases_per_Prepack'].fillna(0).astype(int)
                     df['Prepack Ratio'] = df['Prepack Ratio'].astype(int)
                     df['Order Qty'] = df['Cases_per_Prepack'] * df['Prepack Ratio']  
                 else:
                     slns = parse_edi_file_no_sln(setcion)
+                    df = edi_file_to_df(slns)
                     df = edi_file_to_df(slns)
                     df.ffill(inplace=True)
                     df['Order Qty'] = df['Prepack Ratio']
